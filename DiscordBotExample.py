@@ -2,6 +2,7 @@ import discord, asyncio,sys
 
 
 token = "" # Token Here from Bot Admin Page
+#Warning : if you make your bot's sourcecode as opensource do not open your token to the public. If you open token to the public you can attacked by others
 client = discord.Client() # use Client
 @client.event
 async def on_ready(): # do action 1 time when ready
