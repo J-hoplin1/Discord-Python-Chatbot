@@ -148,19 +148,4 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                 embed.add_field(name="???", value="올바르지 않은 소환사 이름입니다. 다시 확인해주세요!", inline=False)
                 await message.channel.send("Wrong Summoner Nickname", embed=embed)
 
-    if message.content.startswith("$music"):
-        # Get guild user's voice channel information
-        channel = message.author.voice.channel  # Get voice channel who sent message
-        server = message.guild
-        voice_client = client.voice_client_in(server)
-        stat = message.content.split(" ")
-        try:
-            #Check youtube link if it's proper with Regex
-            yturl = re.match('(https?://)?(www\.)?((youtube\.(com))/watch\?v=([-\w]+)|youtu\.be/([-\w]+))', url)
-            if url1 == None:
-                await client.send_message(message.channel,embed=discord.Embed(title="Unproper types of URL",color=0x5CD1E5))
-
-        except IndexError:
-            await client.send_message(message.channel, embed = discord.Embed(title="you haven't entered URL.", color=0x5CD1E5))
-
 client.run(bottoken)
