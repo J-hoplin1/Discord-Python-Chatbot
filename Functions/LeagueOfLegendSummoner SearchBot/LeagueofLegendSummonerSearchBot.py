@@ -158,7 +158,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed = discord.Embed(title="소환사 전적검색", description="", color=0x5CD1E5)
                     embed.add_field(name="Summoner Search From op.gg", value=opggsummonersearch + playerNickname,
                                     inline=False)
-                    embed.add_field(name="Rank Not Found", value="Unranked", inline=False)
+                    embed.add_field(name="Ranked Solo : Unranked", value="Unranked", inline=False)
+                    embed.add_field(name="Flex 5:5 Rank : Unranked", value="Unranked", inline=False)
                     embed.set_thumbnail(url='https:' + RankMedal[0]['src'])
                     embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
