@@ -12,33 +12,8 @@ Discord Bot : League of Legend player information search bot
 
 - How to Use?
 
-    - I'll wrtie how to use based on you just add bot application to your discord server.
-
-    - Copy your bot's token from your bot admin page.
-
-        ```python3
-        def deleteTags(htmls):
-        for a in range(len(htmls)):
-            htmls[a] = re.sub('<.+?>','',str(htmls[a]),0).strip()
-        return htmls
-
-        bottoken = ''
-
-        @client.event # Use these decorator to register an event.
-        async def on_ready(): # on_ready() event : when the bot has finised logging in and setting things up
-        await client.change_presence(status=discord.Status.online, activity=discord.Game("수리중"))
-        print("New log in as {0.user}".format(client))
-        ```
-
-    - And pasted your token to variable 'bottoken'(ln[77] in code). Token should be valued as string types. 
-
-    - Run Code.
+    - !롤전적 (player nickname) : Print simple player's information from op.gg
     
-    - To use command
-    
-        ~~~
-            !롤전적 (player nickname)
-        ~~~
 
     ![img](https://github.com/J-hoplin1/League-Of-Legend-Search-Bot/blob/master/img/1.PNG?raw=true)
 
