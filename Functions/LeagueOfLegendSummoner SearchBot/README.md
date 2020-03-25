@@ -4,6 +4,10 @@ Discord Bot : League of Legend player information search bot
 1 . Discord.py Version : 1.0.0(Rewrite Version)
 
 2 . Language : Python3
+
+3 . What for? : To make able to see summoner's information URL, Rank Info, Most Champion with using command
+
+4 . Warning  : This Application is only available for South Korea. I'm gonna make other countries' server able to use it.
 ***
 
 - How to Use?
@@ -29,6 +33,12 @@ Discord Bot : League of Legend player information search bot
     - And pasted your token to variable 'bottoken'(ln[77] in code). Token should be valued as string types. 
 
     - Run Code.
+    
+    - To use command
+    
+        ~~~
+            $롤전적 (player nickname)
+        ~~~
 
     ![img](https://scontent-ssn1-1.xx.fbcdn.net/v/t1.0-9/90231854_1161743310835567_5624681710483406848_n.jpg?_nc_cat=106&_nc_sid=8024bb&_nc_ohc=6uTvN37CBisAX_2j8nJ&_nc_ht=scontent-ssn1-1.xx&oh=0fddbace6c29530b5767597a5de7a567&oe=5E9F4BBE)
 
