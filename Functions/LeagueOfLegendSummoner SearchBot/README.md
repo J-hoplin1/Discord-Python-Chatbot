@@ -37,9 +37,13 @@ Discord Bot : League of Legend player information search bot
     - To use command
     
         ~~~
-            $롤전적 (player nickname)
+            !롤전적 (player nickname)
         ~~~
 
-    ![img](https://scontent-ssn1-1.xx.fbcdn.net/v/t1.0-9/90231854_1161743310835567_5624681710483406848_n.jpg?_nc_cat=106&_nc_sid=8024bb&_nc_ohc=6uTvN37CBisAX_2j8nJ&_nc_ht=scontent-ssn1-1.xx&oh=0fddbace6c29530b5767597a5de7a567&oe=5E9F4BBE)
+    ![img](https://github.com/J-hoplin1/League-Of-Legend-Search-Bot/blob/master/img/1.PNG?raw=true)
 
-    ![img](https://scontent-ssn1-1.xx.fbcdn.net/v/t1.0-9/90355101_1161743920835506_3671053142260187136_n.jpg?_nc_cat=111&_nc_sid=8024bb&_nc_ohc=BuXOMu3mfAMAX-18N5n&_nc_ht=scontent-ssn1-1.xx&oh=16865f47ac1fa0e7cfd65b1fc644f582&oe=5EA0B3F8)
+    ![img](https://github.com/J-hoplin1/League-Of-Legend-Search-Bot/blob/master/img/2.PNG?raw=true)
+    
+    ![img](https://github.com/J-hoplin1/League-Of-Legend-Search-Bot/blob/master/img/3.PNG?raw=true)
+    
+    ![img](https://github.com/J-hoplin1/League-Of-Legend-Search-Bot/blob/master/img/4.PNG)
