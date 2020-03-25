@@ -94,16 +94,6 @@ async def on_message(message): # on_message() event : when the bot has recieved 
     if message.author == client.user:
         return
 
-    if message.content.startswith("$developer"):
-        embed = discord.Embed(title="이 챗봇의 개발자 정보와 호스팅 위치", description="!ㅡ!", color=0x1BF1E6)
-        embed.set_image(url="https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4")  # to embed image at embeded box
-        embed.add_field(name="개발자 : Hoplin", value="https://github.com/J-hoplin1", inline=False)  # make a field at box
-        embed.add_field(name="서버 호스팅", value="Hosted by AWS. With Ubuntu, using version 16.04 LTS", inline=False)
-        embed.add_field(name="호스팅 위치", value="Commonwealth of Virginia, USA", inline=False)
-        embed.add_field(name="사용된 API와 언어", value="Discord APIs, with Python3", inline=False)
-        embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-        await message.channel.send("개발자 정보와 호스팅 정보입니다.", embed=embed)  # send Message to Channel
-
     if message.content.startswith("$롤전적"):
         playerNickname = ''.join((message.content).split(' ')[1:])
         # Open URL
@@ -126,14 +116,14 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             embed = discord.Embed(title="소환사 이름이 입력되지 않았습니다!", description="", color=0x5CD1E5)
             embed.add_field(name="Summoner name not entered",
                             value="To use command $lolplayerinfo : $lolplayerinfo (Summoner Nickname)", inline=False)
-            embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+            embed.set_footer(text='Service provided by Hoplin.',
                              icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
             await message.channel.send("Error : Incorrect command usage ", embed=embed)
 
         elif len(deleteTags(bs.findAll('h2', {'class': 'Title'}))) != 0:
             embed = discord.Embed(title="존재하지 않는 소환사", description="", color=0x5CD1E5)
             embed.add_field(name="해당 닉네임의 소환사가 존재하지 않습니다.", value="소환사 이름을 확인해주세요", inline=False)
-            embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+            embed.set_footer(text='Service provided by Hoplin.',
                              icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
             await message.channel.send("Error : Non existing Summoner ", embed=embed)
         else:
@@ -161,7 +151,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed.add_field(name="Ranked Solo : Unranked", value="Unranked", inline=False)
                     embed.add_field(name="Flex 5:5 Rank : Unranked", value="Unranked", inline=False)
                     embed.set_thumbnail(url='https:' + RankMedal[0]['src'])
-                    embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+                    embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("소환사 " + playerNickname + "님의 전적", embed=embed)
 
@@ -187,7 +177,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                                     value="KDA : " + mostUsedChampionKDA + " / " + " WinRate : " + mostUsedChampionWinRate,
                                     inline=False)
                     embed.set_thumbnail(url='https:' + RankMedal[1]['src'])
-                    embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+                    embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("소환사 " + playerNickname + "님의 전적", embed=embed)
 
@@ -214,7 +204,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                                     value="KDA : " + mostUsedChampionKDA + " / " + "WinRate : " + mostUsedChampionWinRate,
                                     inline=False)
                     embed.set_thumbnail(url='https:' + RankMedal[0]['src'])
-                    embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+                    embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("소환사 " + playerNickname + "님의 전적", embed=embed)
                 # 두가지 유형의 랭크 모두 완료된사람
@@ -259,7 +249,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                         else:
                             embed.set_thumbnail(url='https:' + RankMedal[0]['src'])
 
-                    embed.set_footer(text='Service provided by Hoplin. Hosted by AWS',
+                    embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("소환사 " + playerNickname + "님의 전적", embed=embed)
             except HTTPError as e:
