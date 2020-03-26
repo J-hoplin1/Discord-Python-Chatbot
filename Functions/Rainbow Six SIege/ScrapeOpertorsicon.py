@@ -1,4 +1,5 @@
 #Scrape entire operator's icon
+#To prevent for new operator problem, i select double url open 
 
 import discord
 import asyncio
