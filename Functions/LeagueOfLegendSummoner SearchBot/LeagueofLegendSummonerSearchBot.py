@@ -46,6 +46,8 @@ bot = commands.Bot(command_prefix='$')
 
 opggsummonersearch = 'https://www.op.gg/summoner/userName='
 
+client = discord.Client()
+
 '''
 asyncio : Asynchronous I/O. It is a module for asynchronous programming and allows CPU operations to be handled in parallel with I/O.
 
