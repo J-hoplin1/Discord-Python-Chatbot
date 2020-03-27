@@ -469,7 +469,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                     embed = discord.Embed(title="Rainbow Six Siege player search from r6stats", description="",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from r6stats", value=playerSite + playerNickname + '/pc/',
+                    embed.add_field(name="Player search from r6stats", value=searchLink,
                                     inline=False)
                     embed.add_field(name="Operation : " + OperationName,
                                     value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,
@@ -513,6 +513,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
             embed = discord.Embed(title="Stats by operator", description="Arrange in order of high-play operator",
                                   color=0x5CD1E5)
+
+            embed.add_field(name="To see more stats by operator click link here", value=playerOperatorMenu, inline=False)
 
             operatorStats = bs.findAll('tr', {'class': 'operator'})
 
@@ -565,6 +567,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 embed = discord.Embed(title="Stats by operator", description="Arrange in order of high-play operator",
                                       color=0x5CD1E5)
+                embed.add_field(name="To see more stats by operator click link here", value=playerOperatorMenu,
+                                inline=False)
 
                 operatorStats = bs.findAll('tr', {'class': 'operator'})
 
