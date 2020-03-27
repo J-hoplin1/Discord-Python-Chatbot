@@ -35,7 +35,7 @@ for ind in range(0,len(operatorListDiv)):
     operatoriconURL = bs2.find('div',{'class' : "operator__header__icons__names"}).img['src']
     operatoriconURLDict[operatorname] = operatoriconURL
 
-token = 'NjkwOTQwNzA1OTEyMTI3NTk4.XnYv6Q.kfhqvbDjyPKEbsbfTTXK9RnbeEo'
+token = ''
 
 client = discord.Client() # Create Instance of Client. This Client is discord server's connection to Discord Room
 def deleteTags(htmls):
