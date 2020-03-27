@@ -44,6 +44,7 @@ for ind in range(0,len(operatorListDiv)):
     #Open URL : each operator's pages
     html2 = requests.get(unisoftURL + operatormainURL).text
     bs2 = BeautifulSoup(html2, 'html.parser')
+    print(operatorname)
     operatoriconURL = bs2.find('div',{'class' : "operator__header__icons__names"}).img['src']
     operatoriconURLDict[operatorname] = operatoriconURL
 ###################################################################
@@ -72,7 +73,7 @@ def tierCompare(solorank,flexrank):
 # for Rainbow Six Siege
 #r6stats 서버에서 크롤링을 막은듯하다
 r6URL = "https://r6stats.com"
-playerSite = 'https://www.r6stats.com/stats/uplay/'
+playerSite = 'https://www.r6stats.com/search/'
 
 warnings.filterwarnings(action='ignore')
 bot = commands.Bot(command_prefix='!')
@@ -127,6 +128,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         embed.add_field(name="Rainbow Six Siege stat search", value="!레식전적 (닉네임)",inline=False)
         embed.add_field(name="Rainbow Six Siege Stats by Operator", value="!레식오퍼 (닉네임)",inline=False)
         embed.add_field(name="League of Legend stat search", value="!롤전적 (닉네임)", inline=False)
+        embed.add_field(name="Covid-19 Virus Korea status", value="!코로나", inline=False)
         embed.add_field(name="Source Code", value="!sourcecode",inline=False)
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
@@ -138,6 +140,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         embed.add_field(name="Rainbow Six Siege search by operators",
                         value="Github : https://github.com/J-hoplin1/Rainbow-Six-Siege-Search-bot/blob/master/RainbowSixSIegeSearchBot.py", inline=False)
         embed.add_field(name="League of Legend search",value="Github : https://github.com/J-hoplin1/League-Of-Legend-Search-Bot",inline=False)
+        embed.add_field(name="Covid-19 Virus Korea status",value="Github : https://github.com/J-hoplin1/Covid19-Information-bot/blob/master/Covid19KoreaStatusBot.py", inline=False)
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
         await message.channel.send("Search bot's souce code is open source!", embed=embed)
@@ -312,76 +315,182 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
     if message.content.startswith("!레식전적"):
 
+
         #Get player nickname and parse page
         playerNickname = ''.join((message.content).split(' ')[1:])
-        html = requests.get(playerSite + playerNickname).text
+        html = requests.get(playerSite + playerNickname + '/pc/').text
+        print(playerSite + playerNickname + '/pc/')
         bs = BeautifulSoup(html, 'html.parser')
 
-        # Get latest season's Rank information
-        latestSeason = bs.find('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})
+        #한번에 검색 안되는 경우에는 해당 반환 리스트의 길이 존재. -> bs.find('div',{'class' : 'results'}
 
-        #if player nickname not entered
-        if len(message.content.split(" ")) == 1:
-            embed = discord.Embed(title="플레이어 이름이 입력되지 않았습니다", description="", color=0x5CD1E5)
-            embed.add_field(name="Error : Player name not entered" + playerNickname, value="To use command : !레식전적 (nickname)")
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Error : Player name not entered ", embed=embed)
+        if bs.find('div',{'class' : 'results'}) == None:
+            # Get latest season's Rank information
+            latestSeason = bs.find('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})
 
-        # search if it's empty page
-        elif latestSeason == None:
-            embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="" ,color=0x5CD1E5)
-            embed.add_field(name="Error : Can't find player name " + playerNickname,value="Please check player's nickname")
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Error : Can't find player name " + playerNickname, embed=embed)
+            # if player nickname not entered
+            if len(message.content.split(" ")) == 1:
+                embed = discord.Embed(title="플레이어 이름이 입력되지 않았습니다", description="", color=0x5CD1E5)
+                embed.add_field(name="Error : Player name not entered" + playerNickname,
+                                value="To use command : !레식전적 (nickname)")
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Error : Player name not entered ", embed=embed)
 
-        #Command entered well
-        else:
+            # search if it's empty page
+            elif latestSeason == None:
+                embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="", color=0x5CD1E5)
+                embed.add_field(name="Error : Can't find player name " + playerNickname,
+                                value="Please check player's nickname")
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Error : Can't find player name " + playerNickname, embed=embed)
 
-            #r6stats profile image
-            r6Profile = bs.find('div',{'class' :'main-logo'}).img['src']
-
-            #player level
-            playerLevel = bs.find('span',{'class' : 'quick-info__value'}).text.strip()
-
-            RankStats = bs.find('div', {'class': 'card stat-card block__ranked horizontal'}).findAll('span', {'class': 'stat-count'})
-            # Get text from <span> values
-            for info in range(len(RankStats)):
-                RankStats[info] = RankStats[info].text.strip()
-            # value of variable RankStats : [Timeplayed, Match Played,kills per matchm, kills,death, KDA Rate,Wins,Losses,W/L Rate]
-
-            # latest season tier medal
-            lastestSeasonRankMedalLocation = latestSeason.div.img['src']
-            # latest Season tier
-            lastestSeasonRankTier = latestSeason.div.img['alt']
-            # latest season operation name
-            OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {'class': 'operation-title'}).text.strip()
-            # latest season Ranking
-            latestSeasonRanking = latestSeason.find('div', {'class': 'rankings-wrapper'}).find('span',{'class': 'ranking'})
-
-
-            if latestSeasonRanking == None:
-                latestSeasonRanking = "N/A"
+            # Command entered well
             else:
-                pass
 
-            embed = discord.Embed(title="Rainbow Six Siege player search from r6stats",description="",color=0x5CD1E5)
-            embed.add_field(name="Player search from r6stats", value=playerSite + playerNickname,inline=False)
-            embed.add_field(name="Operation : " + OperationName,value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,inline=False)
-            embed.add_field(name="Total Play Time", value=RankStats[0],inline=True)
-            embed.add_field(name="Match Played",value=RankStats[1],inline=True)
-            embed.add_field(name="Kills per match", value=RankStats[2],inline=True)
-            embed.add_field(name="Total Kills", value=RankStats[3],inline=True)
-            embed.add_field(name="Total Deaths", value=RankStats[4],inline=True)
-            embed.add_field(name="K/D Ratio", value=RankStats[5],inline=True)
-            embed.add_field(name="Wins", value=RankStats[6],inline=True)
-            embed.add_field(name="Losses", value=RankStats[7], inline=True)
-            embed.add_field(name="W/L Ratio", value=RankStats[8], inline=True)
-            embed.set_thumbnail(url=r6URL + r6Profile)
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Player " + playerNickname+ "'s stats search", embed=embed)
+                # r6stats profile image
+                r6Profile = bs.find('div', {'class': 'main-logo'}).img['src']
+
+                # player level
+                playerLevel = bs.find('span', {'class': 'quick-info__value'}).text.strip()
+
+                RankStats = bs.find('div', {'class': 'card stat-card block__ranked horizontal'}).findAll('span', {
+                    'class': 'stat-count'})
+                # Get text from <span> values
+                for info in range(len(RankStats)):
+                    RankStats[info] = RankStats[info].text.strip()
+                # value of variable RankStats : [Timeplayed, Match Played,kills per matchm, kills,death, KDA Rate,Wins,Losses,W/L Rate]
+
+                # latest season tier medal
+                lastestSeasonRankMedalLocation = latestSeason.div.img['src']
+                # latest Season tier
+                lastestSeasonRankTier = latestSeason.div.img['alt']
+                # latest season operation name
+                OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {
+                    'class': 'operation-title'}).text.strip()
+                # latest season Ranking
+                latestSeasonRanking = latestSeason.find('div', {'class': 'rankings-wrapper'}).find('span',
+                                                                                                   {'class': 'ranking'})
+
+                # if player not ranked, span has class not ranked if ranked span get class ranking
+                if latestSeasonRanking == None:
+                    latestSeasonRanking = bs.find('span', {'class': 'not-ranked'}).text.upper()
+                else:
+                    latestSeasonRanking = latestSeasonRanking.text
+
+                embed = discord.Embed(title="Rainbow Six Siege player search from r6stats", description="",
+                                      color=0x5CD1E5)
+                embed.add_field(name="Player search from r6stats", value=playerSite + playerNickname + '/pc/',
+                                inline=False)
+                embed.add_field(name="Operation : " + OperationName,
+                                value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,
+                                inline=False)
+
+                embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
+                embed.add_field(name="Match Played", value=RankStats[1], inline=True)
+                embed.add_field(name="Kills per match", value=RankStats[2], inline=True)
+                embed.add_field(name="Total Kills", value=RankStats[3], inline=True)
+                embed.add_field(name="Total Deaths", value=RankStats[4], inline=True)
+                embed.add_field(name="K/D Ratio", value=RankStats[5], inline=True)
+                embed.add_field(name="Wins", value=RankStats[6], inline=True)
+                embed.add_field(name="Losses", value=RankStats[7], inline=True)
+                embed.add_field(name="W/L Ratio", value=RankStats[8], inline=True)
+                embed.set_thumbnail(url=r6URL + r6Profile)
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
+        else:
+            searchLink = bs.find('a',{'class' : 'result'})
+            if searchLink == None:
+                embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="", color=0x5CD1E5)
+                embed.add_field(name="Error : Can't find player name " + playerNickname,
+                                value="Please check player's nickname")
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Error : Can't find player name " + playerNickname, embed=embed)
+            else:
+                searchLink = r6URL + searchLink['href']
+                html = requests.get(searchLink).text
+                bs = BeautifulSoup(html,'html.parser')
+                # Get latest season's Rank information
+                latestSeason = bs.find('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})
+
+                # if player nickname not entered
+                if len(message.content.split(" ")) == 1:
+                    embed = discord.Embed(title="플레이어 이름이 입력되지 않았습니다", description="", color=0x5CD1E5)
+                    embed.add_field(name="Error : Player name not entered" + playerNickname,
+                                    value="To use command : !레식전적 (nickname)")
+                    embed.set_footer(text='Service provided by Hoplin.',
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Error : Player name not entered ", embed=embed)
+
+                # search if it's empty page
+                elif latestSeason == None:
+                    embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="", color=0x5CD1E5)
+                    embed.add_field(name="Error : Can't find player name " + playerNickname,
+                                    value="Please check player's nickname")
+                    embed.set_footer(text='Service provided by Hoplin.',
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Error : Can't find player name " + playerNickname, embed=embed)
+
+                # Command entered well
+                else:
+
+                    # r6stats profile image
+                    r6Profile = bs.find('div', {'class': 'main-logo'}).img['src']
+
+                    # player level
+                    playerLevel = bs.find('span', {'class': 'quick-info__value'}).text.strip()
+
+                    RankStats = bs.find('div', {'class': 'card stat-card block__ranked horizontal'}).findAll('span', {
+                        'class': 'stat-count'})
+                    # Get text from <span> values
+                    for info in range(len(RankStats)):
+                        RankStats[info] = RankStats[info].text.strip()
+                    # value of variable RankStats : [Timeplayed, Match Played,kills per matchm, kills,death, KDA Rate,Wins,Losses,W/L Rate]
+
+                    # latest season tier medal
+                    lastestSeasonRankMedalLocation = latestSeason.div.img['src']
+                    # latest Season tier
+                    lastestSeasonRankTier = latestSeason.div.img['alt']
+                    # latest season operation name
+                    OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {
+                        'class': 'operation-title'}).text.strip()
+                    # latest season Ranking
+                    latestSeasonRanking = latestSeason.find('div', {'class': 'rankings-wrapper'}).find('span', {
+                        'class': 'ranking'})
+
+                    # if player not ranked, span has class not ranked if ranked span get class ranking
+                    if latestSeasonRanking == None:
+                        latestSeasonRanking = bs.find('span', {'class': 'not-ranked'}).text.upper()
+                    else:
+                        latestSeasonRanking = latestSeasonRanking.text
+
+                    embed = discord.Embed(title="Rainbow Six Siege player search from r6stats", description="",
+                                          color=0x5CD1E5)
+                    embed.add_field(name="Player search from r6stats", value=playerSite + playerNickname + '/pc/',
+                                    inline=False)
+                    embed.add_field(name="Operation : " + OperationName,
+                                    value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,
+                                    inline=False)
+
+                    embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
+                    embed.add_field(name="Match Played", value=RankStats[1], inline=True)
+                    embed.add_field(name="Kills per match", value=RankStats[2], inline=True)
+                    embed.add_field(name="Total Kills", value=RankStats[3], inline=True)
+                    embed.add_field(name="Total Deaths", value=RankStats[4], inline=True)
+                    embed.add_field(name="K/D Ratio", value=RankStats[5], inline=True)
+                    embed.add_field(name="Wins", value=RankStats[6], inline=True)
+                    embed.add_field(name="Losses", value=RankStats[7], inline=True)
+                    embed.add_field(name="W/L Ratio", value=RankStats[8], inline=True)
+                    embed.set_thumbnail(url=r6URL + r6Profile)
+                    embed.set_footer(text='Service provided by Hoplin.',
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
+
+
+
 
     if message.content.startswith("!레식오퍼"):
         #operator image dictionary key is lowercase
@@ -390,44 +499,142 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         useroperatorInformation = dict()
 
         playerNickname = ''.join((message.content).split(' ')[1:])
-        html = requests.get(playerSite + playerNickname).text
+        html = requests.get(playerSite + playerNickname + '/pc/').text
         bs = BeautifulSoup(html, 'html.parser')
 
-        #Scrape menu hyperlink : to operator menu
-        playerOperator = bs.find('a',{'class' : 'player-tabs__operators'})
-        playerOperatorMenu = r6URL + playerOperator['href']
+        if bs.find('div',{'class' : 'results'}) == None:
+            # Scrape menu hyperlink : to operator menu
+            playerOperator = bs.find('a', {'class': 'player-tabs__operators'})
+            playerOperatorMenu = r6URL + playerOperator['href']
+            print(playerOperatorMenu)
+            # Reopen page
+            html = requests.get(playerOperatorMenu).text
+            bs = BeautifulSoup(html, 'html.parser')
 
-        #Reopen page
-        html = requests.get(playerOperatorMenu).text
-        bs = BeautifulSoup(html, 'html.parser')
+            embed = discord.Embed(title="Stats by operator", description="Arrange in order of high-play operator",
+                                  color=0x5CD1E5)
 
-        embed = discord.Embed(title="Stats by operator", description="Arrange in order of high-play operator", color=0x5CD1E5)
+            operatorStats = bs.findAll('tr', {'class': 'operator'})
 
-        operatorStats = bs.findAll('tr',{'class' : 'operator'})
+            mostOperator = None
 
-        mostOperator = None
-
-        indNumS = 0
-        #statlist -> [operator,kills,deaths,K/D,Wins,Losses,W/L,HeadShots,Melee Kills,DBNO,Playtime]
-        for op in operatorStats:
-            #discord can show maximum 8 fields
-            if indNumS == 7:
-                break
-            count = 0
-            statlist = []
-            if op.td.span.text.split(" ")[-1] == "Recruit":
-                pass
+            indNumS = 0
+            # statlist -> [operator,kills,deaths,K/D,Wins,Losses,W/L,HeadShots,Melee Kills,DBNO,Playtime]
+            for op in operatorStats:
+                # discord can show maximum 8 fields
+                if indNumS == 7:
+                    break
+                count = 0
+                statlist = []
+                if op.td.span.text.split(" ")[-1] == "Recruit":
+                    pass
+                else:
+                    for b in op:
+                        statlist.append(b.text)
+                    if indNumS == 0:
+                        mostOperator = statlist[0].lower()
+                    embed.add_field(name="Operator Name", value=statlist[0], inline=True)
+                    embed.add_field(name="Kills / Deaths", value=statlist[1] + "K / " + statlist[2] + "D", inline=True)
+                    embed.add_field(name="Wins / Losses", value=statlist[4] + "W / " + statlist[5] + "L", inline=True)
+                    indNumS += 1
+            embed.set_thumbnail(url=operatoriconURLDict[mostOperator])
+            embed.set_footer(text='Service provided by Hoplin.',
+                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
+        else:
+            searchLink = bs.find('a', {'class': 'result'})
+            if searchLink == None:
+                embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="", color=0x5CD1E5)
+                embed.add_field(name="Error : Can't find player name " + playerNickname,
+                                value="Please check player's nickname")
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Error : Can't find player name " + playerNickname, embed=embed)
             else:
-                for b in op:
-                    statlist.append(b.text)
-                if indNumS == 0:
-                    mostOperator = statlist[0].lower()
-                embed.add_field(name="Operator Name", value=statlist[0], inline=True)
-                embed.add_field(name="Kills / Deaths", value=statlist[1] + " W " + statlist[2] + " D",inline=True)
-                embed.add_field(name="Wins / Losses",value=statlist[4] + " K " + statlist[5]+" D",inline=True)
-                indNumS+=1
-        embed.set_thumbnail(url=operatoriconURLDict[mostOperator])
+                searchLink = bs.find('a',{'class' : 'result'})['href']
+                searchLink = r6URL + searchLink
+                html = requests.get(searchLink).text
+                bs = BeautifulSoup(html,'html.parser')
+                # Scrape menu hyperlink : to operator menu
+                playerOperator = bs.find('a', {'class': 'player-tabs__operators'})
+                playerOperatorMenu = r6URL + playerOperator['href']
+                print(playerOperatorMenu)
+                # Reopen page
+                html = requests.get(playerOperatorMenu).text
+                bs = BeautifulSoup(html, 'html.parser')
+
+                embed = discord.Embed(title="Stats by operator", description="Arrange in order of high-play operator",
+                                      color=0x5CD1E5)
+
+                operatorStats = bs.findAll('tr', {'class': 'operator'})
+
+                mostOperator = None
+
+                indNumS = 0
+                # statlist -> [operator,kills,deaths,K/D,Wins,Losses,W/L,HeadShots,Melee Kills,DBNO,Playtime]
+                for op in operatorStats:
+                    # discord can show maximum 8 fields
+                    if indNumS == 7:
+                        break
+                    count = 0
+                    statlist = []
+                    if op.td.span.text.split(" ")[-1] == "Recruit":
+                        pass
+                    else:
+                        for b in op:
+                            statlist.append(b.text)
+                        if indNumS == 0:
+                            mostOperator = statlist[0].lower()
+                            if mostOperator == "jäger":
+                                mostOperator = 'jager'
+                            else:
+                                pass
+                        embed.add_field(name="Operator Name", value=statlist[0], inline=True)
+                        embed.add_field(name="Kills / Deaths", value=statlist[1] + "K / " + statlist[2] + "D",
+                                        inline=True)
+                        embed.add_field(name="Wins / Losses", value=statlist[4] + "W / " + statlist[5] + "L",
+                                        inline=True)
+                        indNumS += 1
+                embed.set_thumbnail(url=operatoriconURLDict[mostOperator])
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
+
+    if message.content.startswith("!코로나"):
+        # 보건복지부 코로나 바이러스 정보사이트"
+        covidSite = "http://ncov.mohw.go.kr/index.jsp"
+        html = urlopen(covidSite)
+        bs = BeautifulSoup(html, 'html.parser')
+        latestupdateTime = bs.find('span', {'class': "livedate"}).text.split(',')[0][1:].split('.')
+        statisticalNumbers = bs.findAll('span', {'class': 'num'})
+        beforedayNumbers = bs.findAll('span', {'class': 'before'})
+        # 통계수치
+        statNum = []
+        # 전일대비 수치
+        beforeNum = []
+        for num in range(7):
+            statNum.append(statisticalNumbers[num].text)
+        for num in range(4):
+            beforeNum.append(beforedayNumbers[num].text.split('(')[-1].split(')')[0])
+
+        totalPeopletoInt = statNum[0].split(')')[-1].split(',')
+        tpInt = totalPeopletoInt[0] + totalPeopletoInt[1]
+        lethatRate = round((int(statNum[3]) / int(tpInt)) * 100, 2)
+        embed = discord.Embed(title="Covid-19 Virus Korea Status", description="", color=0x5CD1E5)
+        embed.add_field(name="Data source : Ministry of Health and Welfare of Korea",
+                        value="http://ncov.mohw.go.kr/index.jsp", inline=False)
+        embed.add_field(name="Latest data refred time",
+                        value="해당 자료는 " + latestupdateTime[0] + "월 " + latestupdateTime[1] + "일 " + latestupdateTime[
+                            2] + " 자료입니다.", inline=False)
+        embed.add_field(name="확진환자(누적)", value=statNum[0].split(')')[-1] + "(" + beforeNum[0] + ")", inline=True)
+        embed.add_field(name="완치환자(격리해제)", value=statNum[1] + "(" + beforeNum[1] + ")", inline=True)
+        embed.add_field(name="치료중(격리 중)", value=statNum[2] + "(" + beforeNum[2] + ")", inline=True)
+        embed.add_field(name="사망", value=statNum[3] + "(" + beforeNum[3] + ")", inline=True)
+        embed.add_field(name="누적확진률", value=statNum[6], inline=True)
+        embed.add_field(name="치사율", value=str(lethatRate) + " %", inline=True)
+        embed.set_thumbnail(
+            url="https://ww.namu.la/s/90fc57e8957024083e7745a8d46ade60e98b7d9b244b5c7d033b815c77eac0930af09691fe4a03953c8425c45ce5335ce340bf20634092f1ed191c52e269794070f3e4febe4412eb8277352b72de00f8d210a279531f0229fb8e5ec77dddcf31413b8a4eaddf8d1624e15a8907e3ae32")
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-        await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
+        await message.channel.send("Covid-19 Virus Korea Status", embed=embed)
 client.run(bottoken)
