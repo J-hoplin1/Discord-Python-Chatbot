@@ -20,6 +20,7 @@ from urllib.parse import quote
 import re # Regex for youtube link
 import warnings
 import requests
+import unicodedata
 client = discord.Client() # Create Instance of Client. This Client is discord server's connection to Discord Room
 
 
@@ -69,6 +70,9 @@ def tierCompare(solorank,flexrank):
         return 1
     else:
         return 2
+
+def convertToNormalEnglish(text):
+    return ''.join(char for char in unicodedata.normalize('NFKD', text) if unicodedata.category(char) != 'Mn')
 
 # for Rainbow Six Siege
 #r6stats 서버에서 크롤링을 막은듯하다
@@ -607,11 +611,23 @@ async def on_message(message): # on_message() event : when the bot has recieved 
     if message.content.startswith("!코로나"):
         # 보건복지부 코로나 바이러스 정보사이트"
         covidSite = "http://ncov.mohw.go.kr/index.jsp"
+        covidNotice = "http://ncov.mohw.go.kr"
         html = urlopen(covidSite)
         bs = BeautifulSoup(html, 'html.parser')
         latestupdateTime = bs.find('span', {'class': "livedate"}).text.split(',')[0][1:].split('.')
         statisticalNumbers = bs.findAll('span', {'class': 'num'})
         beforedayNumbers = bs.findAll('span', {'class': 'before'})
+
+        # 주요 브리핑 및 뉴스링크
+        briefTasks = []
+        mainbrief = bs.findAll('a', {'href': re.compile('\/tcmBoardView\.do\?contSeq=[0-9]*')})
+        for brf in mainbrief:
+            container = []
+            container.append(brf.text)
+            container.append(covidNotice + brf['href'])
+            briefTasks.append(container)
+        print(briefTasks)
+
         # 통계수치
         statNum = []
         # 전일대비 수치
@@ -622,7 +638,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             beforeNum.append(beforedayNumbers[num].text.split('(')[-1].split(')')[0])
 
         totalPeopletoInt = statNum[0].split(')')[-1].split(',')
-        tpInt = totalPeopletoInt[0] + totalPeopletoInt[1]
+        tpInt = ''.join(totalPeopletoInt)
         lethatRate = round((int(statNum[3]) / int(tpInt)) * 100, 2)
         embed = discord.Embed(title="Covid-19 Virus Korea Status", description="", color=0x5CD1E5)
         embed.add_field(name="Data source : Ministry of Health and Welfare of Korea",
@@ -636,9 +652,75 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         embed.add_field(name="사망", value=statNum[3] + "(" + beforeNum[3] + ")", inline=True)
         embed.add_field(name="누적확진률", value=statNum[6], inline=True)
         embed.add_field(name="치사율", value=str(lethatRate) + " %", inline=True)
+        embed.add_field(name="- 최신 브리핑 1 : " + briefTasks[0][0], value="Link : " + briefTasks[0][1], inline=False)
+        embed.add_field(name="- 최신 브리핑 2 : " + briefTasks[1][0], value="Link : " + briefTasks[1][1], inline=False)
         embed.set_thumbnail(
             url="https://ww.namu.la/s/90fc57e8957024083e7745a8d46ade60e98b7d9b244b5c7d033b815c77eac0930af09691fe4a03953c8425c45ce5335ce340bf20634092f1ed191c52e269794070f3e4febe4412eb8277352b72de00f8d210a279531f0229fb8e5ec77dddcf31413b8a4eaddf8d1624e15a8907e3ae32")
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
         await message.channel.send("Covid-19 Virus Korea Status", embed=embed)
+
+    if message.content.startswith('!메이플'):
+
+        # Maplestroy base link
+        mapleLink = "https://maplestory.nexon.com"
+        # Maplestory character search base link
+        mapleCharacterSearch = "https://maplestory.nexon.com/Ranking/Union?c="
+
+        playerNickname = ''.join((message.content).split(' ')[1:])
+        html = urlopen(mapleCharacterSearch + quote(playerNickname))  # Use quote() to prevent ascii error
+        bs = BeautifulSoup(html, 'html.parser')
+
+
+        if len(message.content.split(" ")) == 1:
+            embed = discord.Embed(title="닉네임이 입력되지 않았습니다", description="", color=0x5CD1E5)
+            embed.add_field(name="Player nickname not entered",
+                            value="To use command !메이플 : !메이플 (Nickname)", inline=False)
+            embed.set_footer(text='Service provided by Hoplin.',
+                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Error : Incorrect command usage ", embed=embed)
+
+        elif bs.find('tr', {'class': 'search_com_chk'}) == None:
+            embed = discord.Embed(title="Nickname not exist", description="", color=0x5CD1E5)
+            embed.add_field(name="해당 닉네임의 플레이어가 존재하지 않습니다.", value="플레이어 이름을 확인해주세요", inline=False)
+            embed.set_footer(text='Service provided by Hoplin.',
+                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Error : Non existing Summoner ", embed=embed)
+
+        else:
+            # Get to the character info page
+            characterRankingLink = bs.find('tr', {'class': 'search_com_chk'}).find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*')})['href']
+            #Parse Union Level
+            characterUnionRanking = bs.find('tr', {'class': 'search_com_chk'}).findAll('td')[2].text
+
+            html = urlopen(mapleLink + characterRankingLink)
+            bs = BeautifulSoup(html, 'html.parser')
+
+            # Find Ranking page and parse page
+            personalRankingPageURL = bs.find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*\/Ranking\?p\=[A-Za-z0-9%?=]*')})['href']
+            html = urlopen(mapleLink + personalRankingPageURL)
+            bs = BeautifulSoup(html, 'html.parser')
+            #Popularity
+
+            popularityInfo = bs.find('span',{'class' : 'pop_data'}).text.strip()
+            ''' Can't Embed Character's image. Gonna fix it after patch note
+            #Character image
+            getCharacterImage = bs.find('img',{'src': re.compile('https\:\/\/avatar\.maplestory\.nexon\.com\/Character\/[A-Za-z0-9%?=/]*')})['src']
+            '''
+            infoList = []
+            # All Ranking information embeded in <dd> elements
+            RankingInformation = bs.findAll('dd')  # [level,job,servericon,servername,'-',comprehensiveRanking,'-',WorldRanking,'-',JobRanking,'-',Popularity Ranking,'-',Maple Union Ranking,'-',Achivement Ranking]
+            for inf in RankingInformation:
+                infoList.append(inf.text)
+            embed = discord.Embed(title="Player " + playerNickname + "'s information search from nexon.com", description=infoList[0] + " | " +infoList[1] + " | " + "Server : " + infoList[2], color=0x5CD1E5)
+            embed.add_field(name="Click on the link below to view more information.", value = mapleLink + personalRankingPageURL, inline=False)
+            embed.add_field(name="Overall Ranking",value=infoList[4], inline=True)
+            embed.add_field(name="World Ranking", value=infoList[6], inline=True)
+            embed.add_field(name="Job Ranking", value=infoList[8], inline=True)
+            embed.add_field(name="Popularity Ranking", value=infoList[10] + "( " +popularityInfo + " )", inline=True)
+            embed.add_field(name="Maple Union", value=infoList[12] + "( LV." + characterUnionRanking + " )", inline=True)
+            embed.add_field(name="Achivement Ranking", value=infoList[14], inline=True)
+            embed.set_thumbnail(url='https://ssl.nx.com/s2/game/maplestory/renewal/common/logo.png')
+            embed.set_footer(text='Service provided by Hoplin.',icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Player " + playerNickname +"'s information search", embed=embed)
 client.run(bottoken)
