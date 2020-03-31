@@ -686,12 +686,15 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         # Maplestroy base link
         mapleLink = "https://maplestory.nexon.com"
         # Maplestory character search base link
-        mapleCharacterSearch = "https://maplestory.nexon.com/Ranking/Union?c="
+        mapleCharacterSearch = "https://maplestory.nexon.com/Ranking/World/Total?c="
+        mapleUnionLevelSearch = "https://maplestory.nexon.com/Ranking/Union?c="
 
         playerNickname = ''.join((message.content).split(' ')[1:])
         html = urlopen(mapleCharacterSearch + quote(playerNickname))  # Use quote() to prevent ascii error
         bs = BeautifulSoup(html, 'html.parser')
 
+        html2 = urlopen(mapleUnionLevelSearch + quote(playerNickname))
+        bs2 = BeautifulSoup(html2, 'html.parser')
 
         if len(message.content.split(" ")) == 1:
             embed = discord.Embed(title="닉네임이 입력되지 않았습니다", description="", color=0x5CD1E5)
@@ -710,40 +713,55 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
         else:
             # Get to the character info page
-            characterRankingLink = bs.find('tr', {'class': 'search_com_chk'}).find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*')})['href']
-            #Parse Union Level
-            characterUnionRanking = bs.find('tr', {'class': 'search_com_chk'}).findAll('td')[2].text
-
+            characterRankingLink = bs.find('tr', {'class': 'search_com_chk'}).find('a', {
+                'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*')})['href']
+            # Parse Union Level
+            characterUnionRanking = bs2.find('tr', {'class': 'search_com_chk'})
+            if characterUnionRanking == None:
+                pass
+            else:
+                characterUnionRanking = characterUnionRanking.findAll('td')[2].text
             html = urlopen(mapleLink + characterRankingLink)
             bs = BeautifulSoup(html, 'html.parser')
 
             # Find Ranking page and parse page
-            personalRankingPageURL = bs.find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*\/Ranking\?p\=[A-Za-z0-9%?=]*')})['href']
+            personalRankingPageURL = bs.find('a', {
+                'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*\/Ranking\?p\=[A-Za-z0-9%?=]*')})[
+                'href']
             html = urlopen(mapleLink + personalRankingPageURL)
             bs = BeautifulSoup(html, 'html.parser')
-            #Popularity
+            # Popularity
 
-            popularityInfo = bs.find('span',{'class' : 'pop_data'}).text.strip()
+            popularityInfo = bs.find('span', {'class': 'pop_data'}).text.strip()
             ''' Can't Embed Character's image. Gonna fix it after patch note
             #Character image
             getCharacterImage = bs.find('img',{'src': re.compile('https\:\/\/avatar\.maplestory\.nexon\.com\/Character\/[A-Za-z0-9%?=/]*')})['src']
             '''
             infoList = []
             # All Ranking information embeded in <dd> elements
-            RankingInformation = bs.findAll('dd')  # [level,job,servericon,servername,'-',comprehensiveRanking,'-',WorldRanking,'-',JobRanking,'-',Popularity Ranking,'-',Maple Union Ranking,'-',Achivement Ranking]
+            RankingInformation = bs.findAll(
+                'dd')  # [level,job,servericon,servername,'-',comprehensiveRanking,'-',WorldRanking,'-',JobRanking,'-',Popularity Ranking,'-',Maple Union Ranking,'-',Achivement Ranking]
             for inf in RankingInformation:
                 infoList.append(inf.text)
-            embed = discord.Embed(title="Player " + playerNickname + "'s information search from nexon.com", description=infoList[0] + " | " +infoList[1] + " | " + "Server : " + infoList[2], color=0x5CD1E5)
-            embed.add_field(name="Click on the link below to view more information.", value = mapleLink + personalRankingPageURL, inline=False)
-            embed.add_field(name="Overall Ranking",value=infoList[4], inline=True)
+            embed = discord.Embed(title="Player " + playerNickname + "'s information search from nexon.com",
+                                  description=infoList[0] + " | " + infoList[1] + " | " + "Server : " + infoList[2],
+                                  color=0x5CD1E5)
+            embed.add_field(name="Click on the link below to view more information.",
+                            value=mapleLink + personalRankingPageURL, inline=False)
+            embed.add_field(name="Overall Ranking", value=infoList[4], inline=True)
             embed.add_field(name="World Ranking", value=infoList[6], inline=True)
             embed.add_field(name="Job Ranking", value=infoList[8], inline=True)
-            embed.add_field(name="Popularity Ranking", value=infoList[10] + "( " +popularityInfo + " )", inline=True)
-            embed.add_field(name="Maple Union", value=infoList[12] + "( LV." + characterUnionRanking + " )", inline=True)
+            embed.add_field(name="Popularity Ranking", value=infoList[10] + "( " + popularityInfo + " )", inline=True)
+            if characterUnionRanking == None:
+                embed.add_field(name="Maple Union", value=infoList[12], inline=True)
+            else:
+                embed.add_field(name="Maple Union", value=infoList[12] + "( LV." + characterUnionRanking + " )",
+                                inline=True)
             embed.add_field(name="Achivement Ranking", value=infoList[14], inline=True)
             embed.set_thumbnail(url='https://ssl.nx.com/s2/game/maplestory/renewal/common/logo.png')
-            embed.set_footer(text='Service provided by Hoplin.',icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Player " + playerNickname +"'s information search", embed=embed)
+            embed.set_footer(text='Service provided by Hoplin.',
+                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Player " + playerNickname + "'s information search", embed=embed)
 
     if message.content.startswith("!한영번역"):
         baseurl = "https://openapi.naver.com/v1/papago/n2mt"
