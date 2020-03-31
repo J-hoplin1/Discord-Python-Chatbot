@@ -21,6 +21,7 @@ import re # Regex for youtube link
 import warnings
 import requests
 import unicodedata
+import json
 client = discord.Client() # Create Instance of Client. This Client is discord server's connection to Discord Room
 
 
@@ -33,6 +34,10 @@ unisoftURL = "https://www.ubisoft.com"
 rainbowSixSiegeOperatorIconURL = "https://www.ubisoft.com/en-gb/game/rainbow-six/siege/game-info/operators"
 html = requests.get(rainbowSixSiegeOperatorIconURL).text
 bs = BeautifulSoup(html,'html.parser')
+
+#Naver API Key
+client_id = ""
+client_secret = ""
 
 #Get oprators' pages with ccid
 operatorListDiv = bs.findAll('div',{'ccid' : re.compile('[0-9A-Za-z]*')})
@@ -133,6 +138,13 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         embed.add_field(name="Rainbow Six Siege Stats by Operator", value="!레식오퍼 (닉네임)",inline=False)
         embed.add_field(name="League of Legend stat search", value="!롤전적 (닉네임)", inline=False)
         embed.add_field(name="Covid-19 Virus Korea status", value="!코로나", inline=False)
+        embed.add_field(name="MapleStory player information searchbot", value="!메이플 (닉네임)",inline=False)
+        embed.add_field(name="Korean -> English translate",value="!한영번역 (단어 혹은 문장)",inline=False)
+        embed.add_field(name="English -> Korean translate", value="!영한번역 (단어 혹은 문장)",inline=False)
+        embed.add_field(name="Korean -> Japanese translate", value="!한일번역 (단어 혹은 문장)", inline=False)
+        embed.add_field(name="Japanese -> Korean translate", value="!일한번역 (단어 혹은 문장)", inline=False)
+        embed.add_field(name="Korean -> Chinese translate", value="!한중번역 (단어 혹은 문장)", inline=False)
+        embed.add_field(name="Chinese -> Korean translate", value="!중한번역 (단어 혹은 문장)", inline=False)
         embed.add_field(name="Source Code", value="!sourcecode",inline=False)
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
@@ -145,6 +157,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                         value="Github : https://github.com/J-hoplin1/Rainbow-Six-Siege-Search-bot/blob/master/RainbowSixSIegeSearchBot.py", inline=False)
         embed.add_field(name="League of Legend search",value="Github : https://github.com/J-hoplin1/League-Of-Legend-Search-Bot",inline=False)
         embed.add_field(name="Covid-19 Virus Korea status",value="Github : https://github.com/J-hoplin1/Covid19-Information-bot/blob/master/Covid19KoreaStatusBot.py", inline=False)
+        embed.add_field(name="MapleStory player information searchbot",value="https://github.com/J-hoplin1/MapleStory-Character-Information-SearchBot/blob/master/MapleStoryBot.py",inline=False)
+        embed.add_field(name="Papago translate bot",value="https://github.com/J-hoplin1/Papago-API-Bot/blob/master/PapagoBot.py",inline=False)
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
         await message.channel.send("Search bot's souce code is open source!", embed=embed)
@@ -723,4 +737,285 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             embed.set_thumbnail(url='https://ssl.nx.com/s2/game/maplestory/renewal/common/logo.png')
             embed.set_footer(text='Service provided by Hoplin.',icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
             await message.channel.send("Player " + playerNickname +"'s information search", embed=embed)
+
+    if message.content.startswith("!한영번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        #띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+                dataParmas = "source=ko&target=en&text=" + combineword
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | Korean -> English", description="", color=0x5CD1E5)
+                    embed.add_field(name="Korean to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated English", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
+
+
+    if message.content.startswith("!영한번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        # 띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+                dataParmas = "source=en&target=ko&text=" + combineword
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | English -> Korean", description="", color=0x5CD1E5)
+                    embed.add_field(name="English to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated Korean", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
+
+    if message.content.startswith("!한일번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        # 띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+                dataParmas = "source=ko&target=ja&text=" + combineword
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | Korean -> Japanese", description="", color=0x5CD1E5)
+                    embed.add_field(name="Korean to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated Japanese", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
+
+    if message.content.startswith("!일한번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        # 띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+                dataParmas = "source=ja&target=ko&text=" + combineword
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | Japanese -> Korean", description="", color=0x5CD1E5)
+                    embed.add_field(name="Japanese to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated Korean", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
+
+    if message.content.startswith("!한중번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        # 띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+
+                #Simplified Chinese
+                dataParmas = "source=ko&target=zh-CN&text=" + combineword
+
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | Korean -> Chinese(Simplified Chinese)", description="", color=0x5CD1E5)
+                    embed.add_field(name="Korean to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated Chinese(Simplified)", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
+
+    if message.content.startswith("!중한번역"):
+        baseurl = "https://openapi.naver.com/v1/papago/n2mt"
+        # 띄어쓰기 : split처리후 [1:]을 for문으로 붙인다.
+        trsText = message.content.split(" ")
+        try:
+            if len(trsText) == 1:
+                await message.channel.send("단어 혹은 문장이 입력되지 않았어요. 다시한번 확인해주세요.")
+            else:
+                trsText = trsText[1:]
+                combineword = ""
+                for word in trsText:
+                    combineword += " " + word
+                # if entered value is sentence, assemble again and strip blank at both side
+                savedCombineword = combineword.strip()
+                combineword = quote(savedCombineword)
+                # Make Query String.
+                # Simplified Chinese
+                dataParmas = "source=ko&target=zh-CN&text=" + combineword
+
+
+                # Make a Request Instance
+                request = Request(baseurl)
+                # add header to packet
+                request.add_header("X-Naver-Client-Id", client_id)
+                request.add_header("X-Naver-Client-Secret", client_secret)
+                response = urlopen(request, data=dataParmas.encode("utf-8"))
+
+                responsedCode = response.getcode()
+                if (responsedCode == 200):
+                    response_body = response.read()
+                    # response_body -> byte string : decode to utf-8
+                    api_callResult = response_body.decode('utf-8')
+                    # JSON data will be printed as string type. So need to make it back to type JSON(like dictionary)
+                    api_callResult = json.loads(api_callResult)
+                    # Final Result
+                    translatedText = api_callResult['message']['result']["translatedText"]
+                    embed = discord.Embed(title="Translate | Chinese -> Korean", description="", color=0x5CD1E5)
+                    embed.add_field(name="Chinese to translate", value=savedCombineword, inline=False)
+                    embed.add_field(name="Translated Korean", value=translatedText, inline=False)
+                    embed.set_thumbnail(url="https://papago.naver.com/static/img/papago_og.png")
+                    embed.set_footer(text="Service provided by Hoplin. API provided by Naver Open API",
+                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                    await message.channel.send("Translate complete", embed=embed)
+                else:
+                    await message.channel.send("Error Code : " + responsedCode)
+        except HTTPError as e:
+            await message.channel.send("Translate Failed. HTTPError Occured.")
 client.run(bottoken)
