@@ -36,8 +36,8 @@ html = requests.get(rainbowSixSiegeOperatorIconURL).text
 bs = BeautifulSoup(html,'html.parser')
 
 #Naver API Key
-client_id = ""
-client_secret = ""
+client_id = "_Bz5w9FgQSnGqaBAgJTY"
+client_secret = "qdKlaWCpwp"
 
 #Get oprators' pages with ccid
 operatorListDiv = bs.findAll('div',{'ccid' : re.compile('[0-9A-Za-z]*')})
@@ -132,8 +132,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
     if message.author == client.user:
         return
 
-    if message.content.startswith("!help") or message.content.startswith("!도움말"):
-        embed = discord.Embed(title="Stats Search bot commands", description="", color=0x5CD1E5)
+    if message.content.startswith("!help") or message.content.startswith("!도움말") or message.content.startswith("!명령어"):
+        embed = discord.Embed(title="Stats Search bot commands", description="If there is bug in bot, please contact to me. jhyoon0815103@gmail.com.", color=0x5CD1E5)
         embed.add_field(name="Rainbow Six Siege stat search", value="!레식전적 (닉네임)",inline=False)
         embed.add_field(name="Rainbow Six Siege Stats by Operator", value="!레식오퍼 (닉네임)",inline=False)
         embed.add_field(name="League of Legend stat search", value="!롤전적 (닉네임)", inline=False)
@@ -157,7 +157,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         await message.channel.send("Command List", embed=embed)
 
     if message.content.startswith("!sourcecode"):
-        embed = discord.Embed(title="Stats Search bot's sourcdcodes.", description="All of the codes are written in Python3",color=0x5CD1E5)
+        embed = discord.Embed(title="Stats Search bot's sourcdcodes.", description="All of the codes are written in Python3 and are opensource.\n Do not use these code as commercially",color=0x5CD1E5)
         embed.add_field(name="Rainbow Six Siege search", value="Github : https://github.com/J-hoplin1/Rainbow-Six-Siege-Search-bot/blob/master/RainbowSixSIegeSearchBot.py", inline=False)
         embed.add_field(name="Rainbow Six Siege search by operators",
                         value="Github : https://github.com/J-hoplin1/Rainbow-Six-Siege-Search-bot/blob/master/RainbowSixSIegeSearchBot.py", inline=False)
@@ -340,16 +340,14 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
     if message.content.startswith("!레식전적"):
 
-
-        #Get player nickname and parse page
+        # Get player nickname and parse page
         playerNickname = ''.join((message.content).split(' ')[1:])
         html = requests.get(playerSite + playerNickname + '/pc/').text
-        print(playerSite + playerNickname + '/pc/')
         bs = BeautifulSoup(html, 'html.parser')
 
-        #한번에 검색 안되는 경우에는 해당 반환 리스트의 길이 존재. -> bs.find('div',{'class' : 'results'}
+        # 한번에 검색 안되는 경우에는 해당 반환 리스트의 길이 존재. -> bs.find('div',{'class' : 'results'}
 
-        if bs.find('div',{'class' : 'results'}) == None:
+        if bs.find('div', {'class': 'results'}) == None:
             # Get latest season's Rank information
             latestSeason = bs.find('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})
 
@@ -373,7 +371,6 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
             # Command entered well
             else:
-
                 # r6stats profile image
                 r6Profile = bs.find('div', {'class': 'main-logo'}).img['src']
 
@@ -395,8 +392,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                 OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {
                     'class': 'operation-title'}).text.strip()
                 # latest season Ranking
-                latestSeasonRanking = latestSeason.find('div', {'class': 'rankings-wrapper'}).find('span',
-                                                                                                   {'class': 'ranking'})
+                latestSeasonRanking = latestSeason.find('div', {'class': 'rankings-wrapper'}).find('span', {
+                    'class': 'ranking'})
 
                 # if player not ranked, span has class not ranked if ranked span get class ranking
                 if latestSeasonRanking == None:
@@ -404,12 +401,40 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                 else:
                     latestSeasonRanking = latestSeasonRanking.text
 
+                # Add player's MMR Rank MMR Information
+                playerInfoMenus = bs.find('a', {'class': 'player-tabs__season_stats'})['href']
+                mmrMenu = r6URL + playerInfoMenus
+                html = requests.get(mmrMenu).text
+                bs = BeautifulSoup(html, 'html.parser')
+
+                # recent season rank box
+                # Rank show in purpose : America - Europe - Asia. This code only support Asia server's MMR
+                getElements = bs.find('div', {'class': 'card__content'})  # first elements with class 'card__contet is latest season content box
+
+                for ckAsia in getElements.findAll('div', {'class': 'season-stat--region'}):
+                    checkRegion = ckAsia.find('div',{'class' : 'season-stat--region-title'}).text
+                    if checkRegion == "Asia":
+                        getElements = ckAsia
+                        break
+                    else:
+                        pass
+
+                # MMR Datas Info -> [Win,Losses,Abandon,Max,W/L,MMR]
+                mmrDatas = []
+                for dt in getElements.findAll('span', {'class': 'season-stat--region-stats__stat'}):
+                    mmrDatas.append(dt.text)
+
                 embed = discord.Embed(title="Rainbow Six Siege player search from r6stats", description="",
                                       color=0x5CD1E5)
                 embed.add_field(name="Player search from r6stats", value=playerSite + playerNickname + '/pc/',
                                 inline=False)
-                embed.add_field(name="Operation : " + OperationName,
-                                value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,
+                embed.add_field(name="Player's basic information",
+                                value="Ranking : #" + latestSeasonRanking + " | " + "Level : " + playerLevel,
+                                inline=False)
+                embed.add_field(name="Latest season information | Operation : " + OperationName,
+                                value=
+                                "Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/" + mmrDatas[
+                                    1] + " | " + "MMR : " + mmrDatas[-1] + "(Asia Server)",
                                 inline=False)
 
                 embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
@@ -426,7 +451,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                                  icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                 await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
         else:
-            searchLink = bs.find('a',{'class' : 'result'})
+            searchLink = bs.find('a', {'class': 'result'})
             if searchLink == None:
                 embed = discord.Embed(title="해당 이름을 가진 플레이어가 존재하지않습니다.", description="", color=0x5CD1E5)
                 embed.add_field(name="Error : Can't find player name " + playerNickname,
@@ -437,9 +462,9 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             else:
                 searchLink = r6URL + searchLink['href']
                 html = requests.get(searchLink).text
-                bs = BeautifulSoup(html,'html.parser')
+                bs = BeautifulSoup(html, 'html.parser')
                 # Get latest season's Rank information
-                latestSeason = bs.find('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})
+                latestSeason = bs.findAll('div', {'class': re.compile('season\-rank operation\_[A-Za-z_]*')})[0]
 
                 # if player nickname not entered
                 if len(message.content.split(" ")) == 1:
@@ -492,12 +517,37 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     else:
                         latestSeasonRanking = latestSeasonRanking.text
 
+                    #Add player's MMR Rank MMR Information
+                    playerInfoMenus = bs.find('a', {'class' : 'player-tabs__season_stats'})['href']
+                    mmrMenu = r6URL + playerInfoMenus
+                    html = requests.get(mmrMenu).text
+                    bs = BeautifulSoup(html, 'html.parser')
+
+                    #recent season rank box
+                    # Rank show in purpose : America - Europe - Asia. This code only support Asia server's MMR
+                    getElements = bs.find('div', {'class': 'card__content'})  # first elements with class 'card__contet is latest season content box
+
+                    for ckAsia in getElements.findAll('div', {'class': 'season-stat--region'}):
+                        checkRegion = ckAsia.find('div', {'class': 'season-stat--region-title'}).text
+                        if checkRegion == "Asia":
+                            getElements = ckAsia
+                            break
+                        else:
+                            pass
+
+                    # MMR Datas Info -> [Win,Losses,Abandon,Max,W/L,MMR]
+                    mmrDatas = []
+                    for dt in getElements.findAll('span', {'class': 'season-stat--region-stats__stat'}):
+                        mmrDatas.append(dt.text)
+
                     embed = discord.Embed(title="Rainbow Six Siege player search from r6stats", description="",
                                           color=0x5CD1E5)
                     embed.add_field(name="Player search from r6stats", value=searchLink,
                                     inline=False)
-                    embed.add_field(name="Operation : " + OperationName,
-                                    value="Tier : " + lastestSeasonRankTier + " / " + "Ranking : #" + latestSeasonRanking + " / " + "Level : " + playerLevel,
+                    embed.add_field(name="Player's basic information",value= "Ranking : #" + latestSeasonRanking + " | " + "Level : " + playerLevel,inline=False)
+                    embed.add_field(name="Latest season information | Operation : " + OperationName,
+                                    value=
+                                    "Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/"+mmrDatas[1] + " | " + "MMR : " + mmrDatas[-1] +"(Asia Server)",
                                     inline=False)
 
                     embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
@@ -513,9 +563,6 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("Player " + playerNickname + "'s stats search", embed=embed)
-
-
-
 
     if message.content.startswith("!레식오퍼"):
         #operator image dictionary key is lowercase
@@ -672,7 +719,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         embed.add_field(name="- 최신 브리핑 1 : " + briefTasks[0][0], value="Link : " + briefTasks[0][1], inline=False)
         embed.add_field(name="- 최신 브리핑 2 : " + briefTasks[1][0], value="Link : " + briefTasks[1][1], inline=False)
         embed.set_thumbnail(
-            url="https://ww.namu.la/s/90fc57e8957024083e7745a8d46ade60e98b7d9b244b5c7d033b815c77eac0930af09691fe4a03953c8425c45ce5335ce340bf20634092f1ed191c52e269794070f3e4febe4412eb8277352b72de00f8d210a279531f0229fb8e5ec77dddcf31413b8a4eaddf8d1624e15a8907e3ae32")
+            url="https://wikis.krsocsci.org/images/7/79/%EB%8C%80%ED%95%9C%EC%99%95%EA%B5%AD_%ED%83%9C%EA%B7%B9%EA%B8%B0.jpg")
         embed.set_footer(text='Service provided by Hoplin.',
                          icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
         await message.channel.send("Covid-19 Virus Korea Status", embed=embed)
@@ -685,12 +732,13 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         mapleCharacterSearch = "https://maplestory.nexon.com/Ranking/World/Total?c="
         mapleUnionLevelSearch = "https://maplestory.nexon.com/Ranking/Union?c="
 
+
         playerNickname = ''.join((message.content).split(' ')[1:])
         html = urlopen(mapleCharacterSearch + quote(playerNickname))  # Use quote() to prevent ascii error
         bs = BeautifulSoup(html, 'html.parser')
 
         html2 = urlopen(mapleUnionLevelSearch + quote(playerNickname))
-        bs2 = BeautifulSoup(html2, 'html.parser')
+        bs2 = BeautifulSoup(html2,'html.parser')
 
         if len(message.content.split(" ")) == 1:
             embed = discord.Embed(title="닉네임이 입력되지 않았습니다", description="", color=0x5CD1E5)
@@ -705,13 +753,12 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             embed.add_field(name="해당 닉네임의 플레이어가 존재하지 않습니다.", value="플레이어 이름을 확인해주세요", inline=False)
             embed.set_footer(text='Service provided by Hoplin.',
                              icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Error : Non existing Summoner ", embed=embed)
+            await message.channel.send("Error : Nickname not exist ", embed=embed)
 
         else:
             # Get to the character info page
-            characterRankingLink = bs.find('tr', {'class': 'search_com_chk'}).find('a', {
-                'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*')})['href']
-            # Parse Union Level
+            characterRankingLink = bs.find('tr', {'class': 'search_com_chk'}).find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*')})['href']
+            #Parse Union Level
             characterUnionRanking = bs2.find('tr', {'class': 'search_com_chk'})
             if characterUnionRanking == None:
                 pass
@@ -721,43 +768,35 @@ async def on_message(message): # on_message() event : when the bot has recieved 
             bs = BeautifulSoup(html, 'html.parser')
 
             # Find Ranking page and parse page
-            personalRankingPageURL = bs.find('a', {
-                'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*\/Ranking\?p\=[A-Za-z0-9%?=]*')})[
-                'href']
+            personalRankingPageURL = bs.find('a', {'href': re.compile('\/Common\/Character\/Detail\/[A-Za-z0-9%?=]*\/Ranking\?p\=[A-Za-z0-9%?=]*')})['href']
             html = urlopen(mapleLink + personalRankingPageURL)
             bs = BeautifulSoup(html, 'html.parser')
-            # Popularity
+            #Popularity
 
-            popularityInfo = bs.find('span', {'class': 'pop_data'}).text.strip()
+            popularityInfo = bs.find('span',{'class' : 'pop_data'}).text.strip()
             ''' Can't Embed Character's image. Gonna fix it after patch note
             #Character image
             getCharacterImage = bs.find('img',{'src': re.compile('https\:\/\/avatar\.maplestory\.nexon\.com\/Character\/[A-Za-z0-9%?=/]*')})['src']
             '''
             infoList = []
             # All Ranking information embeded in <dd> elements
-            RankingInformation = bs.findAll(
-                'dd')  # [level,job,servericon,servername,'-',comprehensiveRanking,'-',WorldRanking,'-',JobRanking,'-',Popularity Ranking,'-',Maple Union Ranking,'-',Achivement Ranking]
+            RankingInformation = bs.findAll('dd')  # [level,job,servericon,servername,'-',comprehensiveRanking,'-',WorldRanking,'-',JobRanking,'-',Popularity Ranking,'-',Maple Union Ranking,'-',Achivement Ranking]
             for inf in RankingInformation:
                 infoList.append(inf.text)
-            embed = discord.Embed(title="Player " + playerNickname + "'s information search from nexon.com",
-                                  description=infoList[0] + " | " + infoList[1] + " | " + "Server : " + infoList[2],
-                                  color=0x5CD1E5)
-            embed.add_field(name="Click on the link below to view more information.",
-                            value=mapleLink + personalRankingPageURL, inline=False)
-            embed.add_field(name="Overall Ranking", value=infoList[4], inline=True)
+            embed = discord.Embed(title="Player " + playerNickname + "'s information search from nexon.com", description=infoList[0] + " | " +infoList[1] + " | " + "Server : " + infoList[2], color=0x5CD1E5)
+            embed.add_field(name="Click on the link below to view more information.", value = mapleLink + personalRankingPageURL, inline=False)
+            embed.add_field(name="Overall Ranking",value=infoList[4], inline=True)
             embed.add_field(name="World Ranking", value=infoList[6], inline=True)
             embed.add_field(name="Job Ranking", value=infoList[8], inline=True)
-            embed.add_field(name="Popularity Ranking", value=infoList[10] + "( " + popularityInfo + " )", inline=True)
+            embed.add_field(name="Popularity Ranking", value=infoList[10] + "( " +popularityInfo + " )", inline=True)
             if characterUnionRanking == None:
-                embed.add_field(name="Maple Union", value=infoList[12], inline=True)
+                embed.add_field(name="Maple Union", value=infoList[12],inline=True)
             else:
-                embed.add_field(name="Maple Union", value=infoList[12] + "( LV." + characterUnionRanking + " )",
-                                inline=True)
+                embed.add_field(name="Maple Union", value=infoList[12] + "( LV." + characterUnionRanking + " )", inline=True)
             embed.add_field(name="Achivement Ranking", value=infoList[14], inline=True)
             embed.set_thumbnail(url='https://ssl.nx.com/s2/game/maplestory/renewal/common/logo.png')
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Player " + playerNickname + "'s information search", embed=embed)
+            embed.set_footer(text='Service provided by Hoplin.',icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Player " + playerNickname +"'s information search", embed=embed)
 
     if message.content.startswith("!한영번역"):
         baseurl = "https://openapi.naver.com/v1/papago/n2mt"
@@ -1069,59 +1108,71 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                soloQueInfo = bs.find('section', {'class': "solo modeItem"}).find('div', {'class': "mode-section tpp"})
+                soloQueInfo = bs.find('section', {'class': "solo modeItem"})
                 if soloQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Solo que record not found.",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP solo que information", embed=embed)
+                    embed = discord.Embed(title="Not existing plyer",description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",color=0x5CD1E5)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(soloQueInfo)
-                    # Get total playtime
-                    soloQueTotalPlayTime = soloQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    soloQueGameWL = soloQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = soloQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = soloQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    print(tierImage)
-                    tier = tierInfos['alt']
+                    soloQueInfo = soloQueInfo.find('div', {'class': "mode-section tpp"})
+                    if soloQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Solo que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send("PUBG player " + playerNickname + "'s TPP solo que information",
+                                                   embed=embed)
+                    else:
+                        # print(soloQueInfo)
+                        # Get total playtime
+                        soloQueTotalPlayTime = soloQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        soloQueGameWL = soloQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = soloQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = soloQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        print(tierImage)
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in soloQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in soloQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in soloQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in soloQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server", value=seasonInfo[2] + " Server / Total playtime : " +soloQueTotalPlayTime, inline=False)
-                    embed.add_field(name="Tier / Top Rate / Average Rank",
-                                    value=tier + " ("+rankPoint+"p)" +" / " + comInfopercentage[0] + " / " + comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP solo que information", embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + soloQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s " + seasonInfo[1] + " TPP solo que information",
+                            embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer", description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",color=0x5CD1E5)
             await message.channel.send("Error : Not existing player", embed=embed)
@@ -1155,58 +1206,72 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                duoQueInfo = bs.find('section',{'class' : "duo modeItem"}).find('div',{'class' : "mode-section tpp"})
+                duoQueInfo = bs.find('section',{'class' : "duo modeItem"})
                 if duoQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Duo que record not found.",
+                    embed = discord.Embed(title="Not existing plyer",
+                                          description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP duo que information", embed=embed)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(duoQueInfo)
-                    # Get total playtime
-                    duoQueTotalPlayTime = duoQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    duoQueGameWL = duoQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = duoQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = duoQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    tier = tierInfos['alt']
+                    duoQueInfo = duoQueInfo.find('div',{'class' : "mode-section tpp"})
+                    if duoQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Duo que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send("PUBG player " + playerNickname + "'s TPP duo que information",
+                                                   embed=embed)
+                    else:
+                        # print(duoQueInfo)
+                        # Get total playtime
+                        duoQueTotalPlayTime = duoQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        duoQueGameWL = duoQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = duoQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = duoQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in duoQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in duoQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in duoQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in duoQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server and total playtime", value=seasonInfo[2] + " Server / Total playtime : " +duoQueTotalPlayTime, inline=False)
-                    embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
-                                    value=tier + " ("+rankPoint+"p)" +" / " + comInfopercentage[0] + " / " + comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP duo que information", embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server and total playtime",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + duoQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s " + seasonInfo[1] + " TPP duo que information",
+                            embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer",
                                   description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
@@ -1242,59 +1307,73 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                squadQueInfo = bs.find('section',{'class' : "squad modeItem"}).find('div',{'class' : "mode-section tpp"})
+                squadQueInfo = bs.find('section',{'class' : "squad modeItem"})
                 if squadQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Squad que record not found.",
+                    embed = discord.Embed(title="Not existing plyer",
+                                          description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP squad que information", embed=embed)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(duoQueInfo)
-                    # Get total playtime
-                    squadQueTotalPlayTime = squadQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    squadQueGameWL = squadQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = squadQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = squadQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    tier = tierInfos['alt']
+                    squadQueInfo = squadQueInfo.find('div',{'class' : "mode-section tpp"})
+                    if squadQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Squad que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s " + seasonInfo[1] + " TPP squad que information",
+                            embed=embed)
+                    else:
+                        # print(duoQueInfo)
+                        # Get total playtime
+                        squadQueTotalPlayTime = squadQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        squadQueGameWL = squadQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = squadQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = squadQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in squadQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in squadQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in squadQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in squadQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server", value=seasonInfo[2] + " Server / Total playtime : " +squadQueTotalPlayTime, inline=False)
-                    embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
-                                    value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
-                                          comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s TPP squad que information", embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + squadQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s " + seasonInfo[1] + " TPP squad que information",
+                            embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer",
                                   description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
@@ -1330,64 +1409,73 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                soloQueInfo = bs.find('section', {'class': "solo modeItem"}).find('div', {'class': "mode-section fpp"})
+                soloQueInfo = bs.find('section', {'class': "solo modeItem"})
                 if soloQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Solo que record not found.",
+                    embed = discord.Embed(title="Not existing plyer",
+                                          description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP solo que information",
-                                               embed=embed)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(soloQueInfo)
-                    # Get total playtime
-                    soloQueTotalPlayTime = soloQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    soloQueGameWL = soloQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = soloQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = soloQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    print(tierImage)
-                    tier = tierInfos['alt']
+                    soloQueInfo = soloQueInfo.find('div', {'class': "mode-section fpp"})
+                    if soloQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Solo que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send("PUBG player " + playerNickname + "'s FPP solo que information",
+                                                   embed=embed)
+                    else:
+                        # print(soloQueInfo)
+                        # Get total playtime
+                        soloQueTotalPlayTime = soloQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        soloQueGameWL = soloQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = soloQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = soloQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        print(tierImage)
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in soloQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in soloQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in soloQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in soloQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server",
-                                    value=seasonInfo[2] + " Server / Total playtime : " + soloQueTotalPlayTime,
-                                    inline=False)
-                    embed.add_field(name="Tier / Top Rate / Average Rank",
-                                    value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
-                                          comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP solo que information",
-                                               embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + soloQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s " + seasonInfo[1] + " FPP solo que information",
+                            embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer",
                                   description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
@@ -1423,63 +1511,72 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                duoQueInfo = bs.find('section', {'class': "duo modeItem"}).find('div', {'class': "mode-section fpp"})
+                duoQueInfo = bs.find('section', {'class': "duo modeItem"})
                 if duoQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Duo que record not found.",
+                    embed = discord.Embed(title="Not existing plyer",
+                                          description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP duo que information",
-                                               embed=embed)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(duoQueInfo)
-                    # Get total playtime
-                    duoQueTotalPlayTime = duoQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    duoQueGameWL = duoQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = duoQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = duoQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    tier = tierInfos['alt']
+                    duoQueInfo = duoQueInfo.find('div', {'class': "mode-section fpp"})
+                    if duoQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Duo que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send("PUBG player " + playerNickname + "'s FPP duo que information",
+                                                   embed=embed)
+                    else:
+                        # print(duoQueInfo)
+                        # Get total playtime
+                        duoQueTotalPlayTime = duoQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        duoQueGameWL = duoQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = duoQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = duoQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in duoQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in duoQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in duoQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in duoQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server and total playtime",
-                                    value=seasonInfo[2] + " Server / Total playtime : " + duoQueTotalPlayTime,
-                                    inline=False)
-                    embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
-                                    value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
-                                          comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP duo que information",
-                                               embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server and total playtime",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + duoQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send(
+                            "PUBG player " + playerNickname + "'s" + seasonInfo[1] + "FPP duo que information",
+                            embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer",
                                   description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
@@ -1515,64 +1612,69 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # Varaible serverAccessorAndStatus : [(accessors),(ServerStatus),(Don't needed value)]
 
-                squadQueInfo = bs.find('section', {'class': "squad modeItem"}).find('div',
-                                                                                    {'class': "mode-section fpp"})
+                squadQueInfo = bs.find('section', {'class': "squad modeItem"})
                 if squadQueInfo == None:
-                    embed = discord.Embed(title="Record not found", description="Squad que record not found.",
+                    embed = discord.Embed(title="Not existing plyer",
+                                          description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
                                           color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP squad que information",
-                                               embed=embed)
+                    await message.channel.send("Error : Not existing player", embed=embed)
                 else:
-                    # print(duoQueInfo)
-                    # Get total playtime
-                    squadQueTotalPlayTime = squadQueInfo.find('span', {'class': "time_played"}).text.strip()
-                    # Get Win/Top10/Lose : [win,top10,lose]
-                    squadQueGameWL = squadQueInfo.find('em').text.strip().split(' ')
-                    # RankPoint
-                    rankPoint = squadQueInfo.find('span', {'class': 'value'}).text
-                    # Tier image url, tier
-                    tierInfos = squadQueInfo.find('img', {
-                        'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
-                    tierImage = "https:" + tierInfos['src']
-                    tier = tierInfos['alt']
+                    squadQueInfo = squadQueInfo.find('div',{'class': "mode-section fpp"})
+                    if squadQueInfo == None:
+                        embed = discord.Embed(title="Record not found", description="Squad que record not found.",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        await message.channel.send("PUBG player " + playerNickname + "'s FPP squad que information",
+                                                   embed=embed)
+                    else:
+                        # Get total playtime
+                        squadQueTotalPlayTime = squadQueInfo.find('span', {'class': "time_played"}).text.strip()
+                        # Get Win/Top10/Lose : [win,top10,lose]
+                        squadQueGameWL = squadQueInfo.find('em').text.strip().split(' ')
+                        # RankPoint
+                        rankPoint = squadQueInfo.find('span', {'class': 'value'}).text
+                        # Tier image url, tier
+                        tierInfos = squadQueInfo.find('img', {
+                            'src': re.compile('\/\/static\.dak\.gg\/images\/icons\/tier\/[A-Za-z0-9_.]')})
+                        tierImage = "https:" + tierInfos['src']
+                        tier = tierInfos['alt']
 
-                    # Comprehensive info
-                    comInfo = []
-                    # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
-                    for ci in squadQueInfo.findAll('p', {'class': 'value'}):
-                        comInfo.append(ci.text.strip())
-                    comInfopercentage = []
-                    # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
-                    for cif in squadQueInfo.findAll('span', {'class': 'top'}):
-                        comInfopercentage.append((cif.text))
+                        # Comprehensive info
+                        comInfo = []
+                        # [K/D,승률,Top10,평균딜량,게임수, 최다킬수,헤드샷,저격거리,생존,평균순위]
+                        for ci in squadQueInfo.findAll('p', {'class': 'value'}):
+                            comInfo.append(ci.text.strip())
+                        comInfopercentage = []
+                        # [전체 상위 %, K/D,승률,Top10,평균딜량,게임수,최다킬수,헤드샷,저격,생존,None]
+                        for cif in squadQueInfo.findAll('span', {'class': 'top'}):
+                            comInfopercentage.append((cif.text))
 
-                    embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg", description="",
-                                          color=0x5CD1E5)
-                    embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
-                    embed.add_field(name="Real Time Accessors and Server Status",
-                                    value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
-                                          serverAccessorAndStatus[1].split(':')[-1], inline=False)
-                    embed.add_field(name="Player located server",
-                                    value=seasonInfo[2] + " Server / Total playtime : " + squadQueTotalPlayTime,
-                                    inline=False)
-                    embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
-                                    value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
-                                          comInfo[-1], inline=False)
-                    embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
-                    embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
-                    embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
-                    embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
-                    embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
-                    embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
-                    embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
-                    embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
-                    embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
-                    embed.set_thumbnail(url=tierImage)
-                    embed.set_footer(text='Service provided by Hoplin.',
-                                     icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-                    await message.channel.send("PUBG player " + playerNickname + "'s FPP squad que information",
-                                               embed=embed)
+                        embed = discord.Embed(title="Player Unkonw Battle Ground player search from dak.gg",
+                                              description="",
+                                              color=0x5CD1E5)
+                        embed.add_field(name="Player search from dak.gg", value=URL, inline=False)
+                        embed.add_field(name="Real Time Accessors and Server Status",
+                                        value="Accessors : " + serverAccessorAndStatus[0] + " | " "Server Status : " +
+                                              serverAccessorAndStatus[1].split(':')[-1], inline=False)
+                        embed.add_field(name="Player located server",
+                                        value=seasonInfo[2] + " Server / Total playtime : " + squadQueTotalPlayTime,
+                                        inline=False)
+                        embed.add_field(name="Tier(Rank Point) / Top Rate / Average Rank",
+                                        value=tier + " (" + rankPoint + "p)" + " / " + comInfopercentage[0] + " / " +
+                                              comInfo[-1], inline=False)
+                        embed.add_field(name="K/D", value=comInfo[0] + "/" + comInfopercentage[1], inline=True)
+                        embed.add_field(name="승률", value=comInfo[1] + "/" + comInfopercentage[2], inline=True)
+                        embed.add_field(name="Top 10 비율", value=comInfo[2] + "/" + comInfopercentage[3], inline=True)
+                        embed.add_field(name="평균딜량", value=comInfo[3] + "/" + comInfopercentage[4], inline=True)
+                        embed.add_field(name="게임수", value=comInfo[4] + "판/" + comInfopercentage[5], inline=True)
+                        embed.add_field(name="최다킬수", value=comInfo[5] + "킬/" + comInfopercentage[6], inline=True)
+                        embed.add_field(name="헤드샷 비율", value=comInfo[6] + "/" + comInfopercentage[7], inline=True)
+                        embed.add_field(name="저격거리", value=comInfo[7] + "/" + comInfopercentage[8], inline=True)
+                        embed.add_field(name="평균생존시간", value=comInfo[8] + "/" + comInfopercentage[9], inline=True)
+                        embed.set_thumbnail(url=tierImage)
+                        embed.set_footer(text='Service provided by Hoplin.',
+                                         icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                        await message.channel.send("PUBG player " + playerNickname + "'s " + seasonInfo[1] + " FPP squad que information",embed=embed)
         except HTTPError as e:
             embed = discord.Embed(title="Not existing plyer",
                                   description="Can't find player " + playerNickname + "'s information.\nPlease check player's nickname again",
