@@ -25,8 +25,6 @@ import json
 from tqdm import tqdm
 client = discord.Client() # Create Instance of Client. This Client is discord server's connection to Discord Room
 
-
-
 ###################################################################
 #Parse Operator's icon from ubisoft.com
 operatoriconURLDict = dict()
@@ -35,11 +33,6 @@ unisoftURL = "https://www.ubisoft.com"
 rainbowSixSiegeOperatorIconURL = "https://www.ubisoft.com/en-gb/game/rainbow-six/siege/game-info/operators"
 html = requests.get(rainbowSixSiegeOperatorIconURL).text
 bs = BeautifulSoup(html,'html.parser')
-
-#Naver API Key and Discord Bot Tokken
-client_id = ""
-client_secret = ""
-bottoken = ''
 
 #Get oprators' pages with ccid
 operatorListDiv = bs.findAll('div',{'ccid' : re.compile('[0-9A-Za-z]*')})
@@ -54,6 +47,11 @@ for ind in tqdm(range(0,len(operatorListDiv))):
     operatoriconURL = bs2.find('div',{'class' : "operator__header__icons__names"}).img['src']
     operatoriconURLDict[operatorname] = operatoriconURL
 ###################################################################
+
+#Naver API Key
+client_id = ""
+client_secret = ""
+bottoken = ''
 
 # for lolplayersearch
 tierScore = {
@@ -392,8 +390,6 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                 # latest season tier medal
                 lastestSeasonRankMedalLocation = latestSeason.div.img['src']
-                # latest Season tier
-                lastestSeasonRankTier = latestSeason.div.img['alt']
                 # latest season operation name
                 OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {
                     'class': 'operation-title'}).text.strip()
@@ -425,6 +421,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     else:
                         pass
 
+                #Player's Tier Information
+                latestSeasonTier = getElements.find('img')['alt']
                 # MMR Datas Info -> [Win,Losses,Abandon,Max,W/L,MMR]
                 mmrDatas = []
                 for dt in getElements.findAll('span', {'class': 'season-stat--region-stats__stat'}):
@@ -439,8 +437,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                                 inline=False)
                 embed.add_field(name="Latest season information | Operation : " + OperationName,
                                 value=
-                                "Best Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/" + mmrDatas[
-                                    1] + " | " + "MMR : " + mmrDatas[-1] + "(Asia)",
+                                "Tier(Asia) : " + latestSeasonTier + " | W/L : " + mmrDatas[0] + "/" + mmrDatas[
+                                    1] + " | " + "MMR(Asia) : " + mmrDatas[-1],
                                 inline=False)
 
                 embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
@@ -508,8 +506,6 @@ async def on_message(message): # on_message() event : when the bot has recieved 
 
                     # latest season tier medal
                     lastestSeasonRankMedalLocation = latestSeason.div.img['src']
-                    # latest Season tier
-                    lastestSeasonRankTier = latestSeason.div.img['alt']
                     # latest season operation name
                     OperationName = latestSeason.find('div', {'class': 'meta-wrapper'}).find('div', {
                         'class': 'operation-title'}).text.strip()
@@ -541,6 +537,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                         else:
                             pass
 
+                    # Player's Tier Information
+                    latestSeasonTier = getElements.find('img')['alt']
                     # MMR Datas Info -> [Win,Losses,Abandon,Max,W/L,MMR]
                     mmrDatas = []
                     for dt in getElements.findAll('span', {'class': 'season-stat--region-stats__stat'}):
@@ -553,7 +551,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed.add_field(name="Player's basic information",value= "Ranking : #" + latestSeasonRanking + " | " + "Level : " + playerLevel,inline=False)
                     embed.add_field(name="Latest season information | Operation : " + OperationName,
                                     value=
-                                    "Best Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/"+mmrDatas[1] + " | " + "MMR : " + mmrDatas[-1] +"(Asia)",
+                                    "Tier(Asia) : " + latestSeasonTier + " | W/L : " + mmrDatas[0] + "/"+mmrDatas[1] + " | " + "MMR(Asia) : " + mmrDatas[-1],
                                     inline=False)
 
                     embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
