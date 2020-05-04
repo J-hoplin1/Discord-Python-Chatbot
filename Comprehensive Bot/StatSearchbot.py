@@ -22,6 +22,7 @@ import warnings
 import requests
 import unicodedata
 import json
+from tqdm import tqdm
 client = discord.Client() # Create Instance of Client. This Client is discord server's connection to Discord Room
 
 
@@ -35,22 +36,21 @@ rainbowSixSiegeOperatorIconURL = "https://www.ubisoft.com/en-gb/game/rainbow-six
 html = requests.get(rainbowSixSiegeOperatorIconURL).text
 bs = BeautifulSoup(html,'html.parser')
 
-#Naver API Key
-client_id = "_Bz5w9FgQSnGqaBAgJTY"
-client_secret = "qdKlaWCpwp"
+#Naver API Key and Discord Bot Tokken
+client_id = ""
+client_secret = ""
+bottoken = ''
 
 #Get oprators' pages with ccid
 operatorListDiv = bs.findAll('div',{'ccid' : re.compile('[0-9A-Za-z]*')})
-print(len(operatorListDiv))
-for ind in range(0,len(operatorListDiv)):
-    print(ind + 1)
+print("Initiating Rainbow Six Siege Operators' Information....")
+for ind in tqdm(range(0,len(operatorListDiv))):
     operatormainURL = operatorListDiv[ind].a['href']
     #Get Operator's name
     operatorname = operatormainURL.split('/')[-1]
     #Open URL : each operator's pages
     html2 = requests.get(unisoftURL + operatormainURL).text
     bs2 = BeautifulSoup(html2, 'html.parser')
-    print(operatorname)
     operatoriconURL = bs2.find('div',{'class' : "operator__header__icons__names"}).img['src']
     operatoriconURLDict[operatorname] = operatoriconURL
 ###################################################################
@@ -112,7 +112,7 @@ def deleteTags(htmls):
         htmls[a] = re.sub('<.+?>','',str(htmls[a]),0).strip()
     return htmls
 
-bottoken = ''
+
 
 @client.event # Use these decorator to register an event.
 async def on_ready(): # on_ready() event : when the bot has finised logging in and setting things up
@@ -171,39 +171,38 @@ async def on_message(message): # on_message() event : when the bot has recieved 
         await message.channel.send("Search bot's souce code is open source!", embed=embed)
 
     if message.content.startswith("!롤전적"):
-        playerNickname = ''.join((message.content).split(' ')[1:])
-        # Open URL
-        checkURLBool = urlopen(opggsummonersearch + quote(playerNickname))
-        bs = BeautifulSoup(checkURLBool, 'html.parser')
+        try:
+            if len(message.content.split(" ")) == 1:
+                embed = discord.Embed(title="소환사 이름이 입력되지 않았습니다!", description="", color=0x5CD1E5)
+                embed.add_field(name="Summoner name not entered",
+                                value="To use command !롤전적 : !롤전적 (Summoner Nickname)", inline=False)
+                embed.set_footer(text='Service provided by Hoplin.',
+                                 icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+                await message.channel.send("Error : Incorrect command usage ", embed=embed)
+            else:
+                playerNickname = ''.join((message.content).split(' ')[1:])
+                # Open URL
+                checkURLBool = urlopen(opggsummonersearch + quote(playerNickname))
+                bs = BeautifulSoup(checkURLBool, 'html.parser')
 
-        # 자유랭크 언랭은 뒤에 '?image=q_auto&v=1'표현이없다
-        RankMedal = bs.findAll('img', {
-            'src': re.compile('\/\/[a-z]*\-[A-Za-z]*\.[A-Za-z]*\.[A-Za-z]*\/[A-Za-z]*\/[A-Za-z]*\/[a-z0-9_]*\.png')})
-        # index 0 : Solo Rank
-        # index 1 : Flexible 5v5 rank
+                # 자유랭크 언랭은 뒤에 '?image=q_auto&v=1'표현이없다
 
-        # for mostUsedChampion
-        mostUsedChampion = bs.find('div', {'class': 'ChampionName'})
-        mostUsedChampionKDA = bs.find('span', {'class': 'KDA'})
+                # Patch Note 20200503에서
+                # Medal = bs.find('div', {'class': 'ContentWrap tabItems'}) 이렇게 바꾸었었습니다.
+                # PC의 설정된 환경 혹은 OS플랫폼에 따라서 ContentWrap tabItems의 띄어쓰기가 인식이
 
-        # 솔랭, 자랭 둘다 배치가 안되어있는경우 -> 사용된 챔피언 자체가 없다. 즉 모스트 챔피언 메뉴를 넣을 필요가 없다.
+                Medal = bs.find('div', {'class': 'SideContent'})
+                RankMedal = Medal.findAll('img', {'src': re.compile(
+                    '\/\/[a-z]*\-[A-Za-z]*\.[A-Za-z]*\.[A-Za-z]*\/[A-Za-z]*\/[A-Za-z]*\/[a-z0-9_]*\.png')})
+                # Variable RankMedal's index 0 : Solo Rank
+                # Variable RankMedal's index 1 : Flexible 5v5 rank
 
-        if len(message.content.split(" ")) == 1:
-            embed = discord.Embed(title="소환사 이름이 입력되지 않았습니다!", description="", color=0x5CD1E5)
-            embed.add_field(name="Summoner name not entered",
-                            value="To use command $lolplayerinfo : $lolplayerinfo (Summoner Nickname)", inline=False)
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Error : Incorrect command usage ", embed=embed)
+                # for mostUsedChampion
+                mostUsedChampion = bs.find('div', {'class': 'ChampionName'})
+                mostUsedChampionKDA = bs.find('span', {'class': 'KDA'})
 
-        elif len(deleteTags(bs.findAll('h2', {'class': 'Title'}))) != 0:
-            embed = discord.Embed(title="존재하지 않는 소환사", description="", color=0x5CD1E5)
-            embed.add_field(name="해당 닉네임의 소환사가 존재하지 않습니다.", value="소환사 이름을 확인해주세요", inline=False)
-            embed.set_footer(text='Service provided by Hoplin.',
-                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
-            await message.channel.send("Error : Non existing Summoner ", embed=embed)
-        else:
-            try:
+                # 솔랭, 자랭 둘다 배치가 안되어있는경우 -> 사용된 챔피언 자체가 없다. 즉 모스트 챔피언 메뉴를 넣을 필요가 없다.
+
                 # Scrape Summoner's Rank information
                 # [Solorank,Solorank Tier]
                 solorank_Types_and_Tier_Info = deleteTags(bs.findAll('div', {'class': {'RankType', 'TierRank'}}))
@@ -328,15 +327,22 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed.set_footer(text='Service provided by Hoplin.',
                                      icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
                     await message.channel.send("소환사 " + playerNickname + "님의 전적", embed=embed)
-            except HTTPError as e:
-                embed = discord.Embed(title="소환사 전적검색 실패", description="", color=0x5CD1E5)
-                embed.add_field(name="", value="올바르지 않은 소환사 이름입니다. 다시 확인해주세요!", inline=False)
-                await message.channel.send("Wrong Summoner Nickname")
+        except HTTPError as e:
+            embed = discord.Embed(title="소환사 전적검색 실패", description="", color=0x5CD1E5)
+            embed.add_field(name="", value="올바르지 않은 소환사 이름입니다. 다시 확인해주세요!", inline=False)
+            await message.channel.send("Wrong Summoner Nickname")
 
-            except UnicodeEncodeError as e:
-                embed = discord.Embed(title="소환사 전적검색 실패", description="", color=0x5CD1E5)
-                embed.add_field(name="???", value="올바르지 않은 소환사 이름입니다. 다시 확인해주세요!", inline=False)
-                await message.channel.send("Wrong Summoner Nickname", embed=embed)
+        except UnicodeEncodeError as e:
+            embed = discord.Embed(title="소환사 전적검색 실패", description="", color=0x5CD1E5)
+            embed.add_field(name="???", value="올바르지 않은 소환사 이름입니다. 다시 확인해주세요!", inline=False)
+            await message.channel.send("Wrong Summoner Nickname", embed=embed)
+
+        except AttributeError as e:
+            embed = discord.Embed(title="존재하지 않는 소환사", description="", color=0x5CD1E5)
+            embed.add_field(name="해당 닉네임의 소환사가 존재하지 않습니다.", value="소환사 이름을 확인해주세요", inline=False)
+            embed.set_footer(text='Service provided by Hoplin.',
+                             icon_url='https://avatars2.githubusercontent.com/u/45956041?s=460&u=1caf3b112111cbd9849a2b95a88c3a8f3a15ecfa&v=4')
+            await message.channel.send("Error : Non existing Summoner ", embed=embed)
 
     if message.content.startswith("!레식전적"):
 
@@ -433,8 +439,8 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                                 inline=False)
                 embed.add_field(name="Latest season information | Operation : " + OperationName,
                                 value=
-                                "Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/" + mmrDatas[
-                                    1] + " | " + "MMR : " + mmrDatas[-1] + "(Asia Server)",
+                                "Best Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/" + mmrDatas[
+                                    1] + " | " + "MMR : " + mmrDatas[-1] + "(Asia)",
                                 inline=False)
 
                 embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
@@ -547,7 +553,7 @@ async def on_message(message): # on_message() event : when the bot has recieved 
                     embed.add_field(name="Player's basic information",value= "Ranking : #" + latestSeasonRanking + " | " + "Level : " + playerLevel,inline=False)
                     embed.add_field(name="Latest season information | Operation : " + OperationName,
                                     value=
-                                    "Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/"+mmrDatas[1] + " | " + "MMR : " + mmrDatas[-1] +"(Asia Server)",
+                                    "Best Tier : " + lastestSeasonRankTier + " | W/L : " + mmrDatas[0] + "/"+mmrDatas[1] + " | " + "MMR : " + mmrDatas[-1] +"(Asia)",
                                     inline=False)
 
                     embed.add_field(name="Total Play Time", value=RankStats[0], inline=True)
